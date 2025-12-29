@@ -37,8 +37,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add MLProject/occupancy_processed.csv || echo "File CSV tidak ditemukan"
-          git commit -m "Update processed dataset from GitHub Actions" || echo "No changes to commit"
+          git add MLProject/* git commit -m "Update training outputs and processed data" || echo "No changes to commit"
           git push
 
       - name: Build Docker Image
