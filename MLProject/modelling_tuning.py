@@ -26,7 +26,7 @@ else:
 # 2. Setup Path & Load Data
 mlflow.set_experiment("Occupancy_Estimation_Baseline")
 base_dir = os.path.dirname(os.path.abspath(__file__))
-path_data = os.path.join(base_dir, "namadataset_preprocessing", "occupancy_processed.csv")
+path_data = os.path.join(base_dir, "occupancy_processed.csv") 
 mlflow.autolog()
 
 if not os.path.exists(path_data):
