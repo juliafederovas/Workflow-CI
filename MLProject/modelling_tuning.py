@@ -24,9 +24,10 @@ else:
     dagshub.init(repo_owner=repo_owner, repo_name=repo_name, mlflow=True)
 
 # 2. Setup Path & Load Data
-mlflow.set_experiment("Occupancy_Estimation_Skilled_Advance")
+mlflow.set_experiment("Occupancy_Estimation_Baseline")
 base_dir = os.path.dirname(os.path.abspath(__file__))
-path_data = os.path.join(base_dir, "occupancy_processed.csv")
+path_data = os.path.join(base_dir, "namadataset_preprocessing", "occupancy_processed.csv")
+mlflow.autolog()
 
 if not os.path.exists(path_data):
     raise FileNotFoundError(f"Dataset tidak ditemukan di: {path_data}")
@@ -37,26 +38,22 @@ y = df['Room_Occupancy_Count']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # 3. Training & Hyperparameter Tuning
-with mlflow.start_run(run_name="RandomForest_Tuning_Julia"):
-    param_grid = {'n_estimators': [50, 100], 'max_depth': [10, 20]}
-    rf = RandomForestClassifier(random_state=42)
-    grid_search = GridSearchCV(rf, param_grid, cv=3)
-    
-    # SEKARANG grid_search SUDAH DEFINED SEBELUM FIT
-    grid_search.fit(X_train, y_train)
-    best_model = grid_search.best_estimator_
-    
-    # Simpan model lokal untuk Build Docker Image di GitHub Actions
-    if token:
-        mlflow.sklearn.save_model(best_model, "mlruns/model")
 
-    # Logging Metrics & Artifacts
+param_grid = {'n_estimators': [50, 100], 'max_depth': [10, 20]}
+rf = RandomForestClassifier(random_state=42)
+grid_search = GridSearchCV(rf, param_grid, cv=3)
+     
+grid_search.fit(X_train, y_train)
+best_model = grid_search.best_estimator_
+     
+if token:
+    mlflow.sklearn.save_model(best_model, "mlruns/model")
+ 
     y_pred = best_model.predict(X_test)
     acc = accuracy_score(y_test, y_pred) 
     mlflow.log_params(grid_search.best_params_) 
     mlflow.log_metric("accuracy", acc)
-
-    # Artefak 1: Confusion Matrix
+ 
     plt.figure(figsize=(8,6))
     cm = confusion_matrix(y_test, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
@@ -65,8 +62,7 @@ with mlflow.start_run(run_name="RandomForest_Tuning_Julia"):
     plt.savefig(path_cm)
     mlflow.log_artifact(path_cm) 
     plt.close() 
-
-    # Artefak 2: Feature Importance Plot
+ 
     plt.figure(figsize=(8,6))
     feat_importances = pd.Series(best_model.feature_importances_, index=X.columns)
     feat_importances.nlargest(10).plot(kind='barh')
@@ -75,8 +71,7 @@ with mlflow.start_run(run_name="RandomForest_Tuning_Julia"):
     plt.savefig(path_fi)
     mlflow.log_artifact(path_fi) 
     plt.close()
-    
-    # Simpan model.pkl untuk submission ZIP
+     
     path_model = os.path.join(base_dir, "model.pkl")
     joblib.dump(best_model, path_model)
     print(f"Training selesai. Akurasi: {acc}")
