@@ -1,0 +1,4 @@
+name: Occupancy_Estimation_Project
+entry_points:
+  main:
+    command: "python modelling_tuning.py"
