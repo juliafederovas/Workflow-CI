@@ -30,8 +30,7 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.DAGSHUB_TOKEN }}
         run: |
-          # Disesuaikan ke folder MLProject
-          python MLProject/modelling_tuning.py
+          python -m mlflow run MLProject/ --env-manager local
 
       - name: Commit and Push processed data
         run: |
